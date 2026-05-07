@@ -1,0 +1,13 @@
+# ── Step 1: generate_sandbox.py ─────────────────────────────────────
+sentence-transformers>=2.7.0
+faiss-cpu>=1.8.0
+networkx>=3.3
+numpy>=1.26.0
+
+# ── Steps 2-4: rag_engines.py + compiler.py ─────────────────────────
+dspy-ai>=2.5.0
+openai>=1.35.0          # OpenRouter uses the OpenAI-compatible API surface
+
+# ── Neo4j driver ─────────────────────────────────────────────────────
+neo4j>=5.20.0
+python-dotenv>=1.0.0    # loads .env credentials

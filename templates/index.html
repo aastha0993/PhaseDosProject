@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cancel Culture Sandbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & TOKENS ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black:  #1B2A4A;
+  --white:  #FFFFFF;
+  --yellow: #D4DBF0;
+  --red:    #5C1525;
+  --green:  #0F3D2A;
+  --gray:   #E4E0D8;
+  --canvas: #F3F1EC;
+  --border: 2px solid var(--black);
+  --shadow: 4px 4px 0 var(--black);
+  --sans:   'Space Grotesk', sans-serif;
+  --mono:   'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--canvas);
+  color: var(--black);
+  min-height: 100vh;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+header {
+  padding: 28px 40px;
+  border-bottom: var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.logo {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+}
+.logo span { color: var(--black); opacity: 0.35; }
+.header-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 0.5px;
+}
+
+/* ── SEARCH ───────────────────────────────────────────────── */
+.search-zone {
+  padding: 48px 40px 40px;
+  border-bottom: var(--border);
+  max-width: 800px;
+}
+.search-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #999;
+  margin-bottom: 14px;
+}
+.search-row {
+  display: flex;
+}
+.search-input {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  padding: 14px 18px;
+  border: var(--border);
+  border-right: none;
+  background: var(--white);
+  color: var(--black);
+  outline: none;
+}
+.search-input:focus { background: var(--yellow); }
+.search-input::placeholder { color: #bbb; font-weight: 400; }
+.btn-analyze {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  background: var(--black);
+  color: var(--white);
+  border: var(--border);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.08s, box-shadow 0.08s;
+  white-space: nowrap;
+}
+.btn-analyze:hover  { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
+.btn-analyze:active { transform: none; box-shadow: none; }
+.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* ── LOADING ──────────────────────────────────────────────── */
+.loading {
+  display: none;
+  padding: 40px;
+  border-bottom: var(--border);
+  align-items: center;
+  gap: 16px;
+}
+.loading.active { display: flex; }
+.spinner {
+  width: 28px; height: 28px;
+  border: 3px solid var(--black);
+  background: var(--yellow);
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── ERROR ────────────────────────────────────────────────── */
+.error-panel {
+  display: none;
+  padding: 24px 40px;
+  border-bottom: var(--border);
+  border-left: 6px solid var(--red);
+  background: #EEE8F0;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.error-panel.active { display: block; }
+
+/* ── RESULTS ──────────────────────────────────────────────── */
+#results { display: none; }
+#results.visible { display: block; }
+
+/* verdict */
+.verdict-banner {
+  padding: 36px 40px;
+  border-bottom: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.verdict-banner.fire { background: var(--red); }
+.verdict-banner.hire { background: var(--green); }
+.verdict-badge {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -4px;
+  color: var(--white);
+}
+.verdict-banner.hire .verdict-badge { color: var(--black); }
+.verdict-info { flex: 1; }
+.verdict-creator {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--white);
+  letter-spacing: -1px;
+  text-transform: uppercase;
+}
+.verdict-banner.hire .verdict-creator { color: var(--black); }
+.verdict-niche {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.verdict-banner.hire .verdict-niche { color: rgba(0,0,0,0.45); }
+.metric-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border: 2px solid rgba(255,255,255,0.5);
+  color: var(--white);
+  letter-spacing: 1px;
+  align-self: flex-start;
+}
+.verdict-banner.hire .metric-tag { border-color: rgba(0,0,0,0.3); color: var(--black); }
+
+/* velocity */
+.velocity-row {
+  padding: 24px 40px;
+  border-bottom: var(--border);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.velocity-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #999;
+  white-space: nowrap;
+}
+.velocity-track {
+  flex: 1;
+  height: 24px;
+  border: var(--border);
+  background: var(--gray);
+  overflow: hidden;
+}
+.velocity-fill {
+  height: 100%;
+  background: var(--black);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.velocity-val {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* context grid */
+.context-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: var(--border);
+}
+.ctx {
+  padding: 28px;
+  border-right: var(--border);
+}
+.ctx:last-child { border-right: none; }
+.ctx-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #999;
+  margin-bottom: 6px;
+}
+.ctx-title {
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--black);
+}
+.ctx-body {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.75;
+  color: #2A3050;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.ctx-body::-webkit-scrollbar { width: 3px; }
+.ctx-body::-webkit-scrollbar-thumb { background: #ccc; }
+
+/* stat rows */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 11px;
+}
+.stat-key { color: #888; }
+.stat-val { font-weight: 700; }
+
+/* drama chunks */
+.chunk {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.chunk-type {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #999;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
+/* edge rows */
+.edge {
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 11px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.edge-type {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: var(--black);
+  color: var(--white);
+  padding: 2px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* receipts */
+.receipts {
+  border-bottom: var(--border);
+}
+.receipts-bar {
+  padding: 12px 40px;
+  border-bottom: 2px solid var(--black);
+  background: var(--black);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #8A9BBF;
+  text-transform: uppercase;
+}
+.receipts-text {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.9;
+  padding: 28px 40px;
+  background: #080D1A;
+  color: #99B8E8;
+  white-space: pre-wrap;
+}
+
+/* chain of thought */
+.cot { border-bottom: var(--border); }
+.cot-toggle {
+  width: 100%;
+  text-align: left;
+  padding: 16px 40px;
+  background: var(--gray);
+  border: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  color: var(--black);
+}
+.cot-toggle:hover { background: #D8D3CA; }
+.cot-arrow { transition: transform 0.2s; }
+.cot.open .cot-arrow { transform: rotate(90deg); }
+.cot-body {
+  display: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  padding: 28px 40px;
+  color: #364060;
+  white-space: pre-wrap;
+  border-top: var(--border);
+}
+.cot.open .cot-body { display: block; }
+
+/* footer */
+footer {
+  padding: 20px 40px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #aaa;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* responsive */
+@media (max-width: 700px) {
+  .context-grid { grid-template-columns: 1fr; }
+  .ctx { border-right: none; border-bottom: var(--border); }
+  .ctx:last-child { border-bottom: none; }
+  header, .search-zone, .verdict-banner,
+  .velocity-row, .ctx, .receipts-text,
+  .cot-toggle, .cot-body, footer { padding-left: 20px; padding-right: 20px; }
+  .search-zone { padding-top: 32px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Cancel Culture Sandbox <span>///</span> PR Risk Engine</div>
+  <div class="header-meta" id="header-meta">30 creators · 50 drama chunks · 22 beefs</div>
+</header>
+
+<div class="search-zone">
+  <div class="search-label">Creator name</div>
+  <div class="search-row">
+    <input id="search-input" class="search-input" type="text"
+           placeholder="e.g. CosmicKai" list="creator-list" autocomplete="off" />
+    <datalist id="creator-list"></datalist>
+    <button class="btn-analyze" id="btn-analyze" onclick="runAnalysis()">Analyze ▶</button>
+  </div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Querying data streams...</div>
+</div>
+
+<div class="error-panel" id="error-panel"></div>
+
+<section id="results">
+
+  <div class="verdict-banner" id="verdict-banner">
+    <div class="verdict-badge" id="verdict-badge">—</div>
+    <div class="verdict-info">
+      <div class="verdict-creator" id="verdict-creator"></div>
+      <div class="verdict-niche" id="verdict-niche"></div>
+    </div>
+    <div class="metric-tag" id="metric-tag"></div>
+  </div>
+
+  <div class="velocity-row">
+    <div class="velocity-label">Cancel Velocity</div>
+    <div class="velocity-track">
+      <div class="velocity-fill" id="velocity-fill" style="width:0%"></div>
+    </div>
+    <div class="velocity-val" id="velocity-val">0.0</div>
+  </div>
+
+  <div class="context-grid">
+    <div class="ctx">
+      <div class="ctx-label">SQLite</div>
+      <div class="ctx-title">The Math</div>
+      <div class="ctx-body" id="ctx-sql"></div>
+    </div>
+    <div class="ctx">
+      <div class="ctx-label">FAISS</div>
+      <div class="ctx-title">The Lore</div>
+      <div class="ctx-body" id="ctx-faiss"></div>
+    </div>
+    <div class="ctx">
+      <div class="ctx-label">Neo4j</div>
+      <div class="ctx-title">The Beef</div>
+      <div class="ctx-body" id="ctx-neo4j"></div>
+    </div>
+  </div>
+
+  <div class="receipts">
+    <div class="receipts-bar">The Receipts — synthesized verdict evidence</div>
+    <div class="receipts-text" id="receipts-text"></div>
+  </div>
+
+  <div class="cot" id="cot">
+    <button class="cot-toggle" onclick="document.getElementById('cot').classList.toggle('open')">
+      <span>Chain of Thought</span>
+      <span class="cot-arrow">▶</span>
+    </button>
+    <div class="cot-body" id="cot-body"></div>
+  </div>
+
+</section>
+
+<footer>
+  <span>DSPy + Parallel RAG + Neo4j</span>
+  <span>Teacher: gemini-2.0-flash · Student: gemini-2.0-flash-lite</span>
+</footer>
+
+<script>
+let creators = [];
+
+const CYCLE = [
+  'Querying SQLite...',
+  'Pulling FAISS drama corpus...',
+  'Traversing Neo4j graph...',
+  'Running DSPy chain-of-thought...',
+  'Compiling verdict...',
+];
+
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/api/creators');
+    creators = await res.json();
+    const dl = document.getElementById('creator-list');
+    dl.innerHTML = creators.map(c => `<option value="${c.name}">`).join('');
+  } catch (_) {}
+  document.getElementById('search-input')
+    .addEventListener('keydown', e => { if (e.key === 'Enter') runAnalysis(); });
+});
+
+async function runAnalysis() {
+  const name = document.getElementById('search-input').value.trim();
+  if (!name) { document.getElementById('search-input').style.background = '#EEE8F0'; setTimeout(() => document.getElementById('search-input').style.background = '', 400); return; }
+
+  // loading
+  let ci = 0;
+  const lt = document.getElementById('loading-text');
+  lt.textContent = CYCLE[0];
+  const timer = setInterval(() => { ci = (ci + 1) % CYCLE.length; lt.textContent = CYCLE[ci]; }, 1600);
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('error-panel').classList.remove('active');
+  document.getElementById('btn-analyze').disabled = true;
+
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ creator_name: name }),
+    });
+    const data = await res.json();
+    clearInterval(timer);
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('btn-analyze').disabled = false;
+    if (!res.ok) { showError(data.error || 'Pipeline failed'); return; }
+    render(data);
+  } catch (e) {
+    clearInterval(timer);
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('btn-analyze').disabled = false;
+    showError(e.message);
+  }
+}
+
+function render(d) {
+  const verdict = (d.hire_or_fire || 'ERROR').toUpperCase();
+  const cv = parseFloat(d.cancel_velocity) || 0;
+  const isHire = verdict === 'HIRE';
+  const creator = creators.find(c => c.name.toLowerCase() === d.creator.toLowerCase()) || {};
+
+  // banner
+  const banner = document.getElementById('verdict-banner');
+  banner.className = 'verdict-banner ' + (isHire ? 'hire' : 'fire');
+  document.getElementById('verdict-badge').textContent = verdict;
+  document.getElementById('verdict-creator').textContent = d.creator || '';
+  document.getElementById('verdict-niche').textContent = creator.niche || '';
+  document.getElementById('metric-tag').textContent = d.metric_passed ? '✓ metric pass' : '✗ metric fail';
+
+  // velocity
+  setTimeout(() => {
+    document.getElementById('velocity-fill').style.width = Math.min(cv / 10 * 100, 100) + '%';
+    document.getElementById('velocity-val').textContent = cv.toFixed(1);
+  }, 60);
+
+  // contexts
+  renderSql(d.contexts?.sql_context || '');
+  renderFaiss(d.contexts?.faiss_context || '');
+  renderNeo4j(d.contexts?.graph_context || '');
+
+  // receipts + cot
+  document.getElementById('receipts-text').textContent = d.the_receipts || '';
+  document.getElementById('cot-body').textContent = d.raw_reasoning || '(no trace)';
+  document.getElementById('cot').classList.remove('open');
+
+  document.getElementById('results').classList.add('visible');
+  document.querySelector('.verdict-banner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderSql(raw) {
+  const el = document.getElementById('ctx-sql');
+  const lines = raw.split('\n').filter(l => l.includes(':') && l.startsWith('  '));
+  if (!lines.length) { el.textContent = raw; return; }
+  el.innerHTML = lines.map(line => {
+    const i = line.indexOf(':');
+    const k = line.slice(0, i).trim();
+    const v = line.slice(i + 1).trim();
+    return `<div class="stat-row"><span class="stat-key">${esc(k)}</span><span class="stat-val">${esc(v)}</span></div>`;
+  }).join('');
+}
+
+function renderFaiss(raw) {
+  const el = document.getElementById('ctx-faiss');
+  const chunks = raw.split(/\n\n(?=  \[\d)/).slice(1);
+  if (!chunks.length) { el.textContent = raw; return; }
+  el.innerHTML = chunks.map(chunk => {
+    const tm = chunk.match(/type=(\w+)/i);
+    const type = tm ? tm[1] : '';
+    const text = chunk.replace(/^\s*\[.*?\]\n/, '').trim();
+    return `<div class="chunk"><div class="chunk-type">${esc(type)}</div>${esc(text.slice(0, 200))}${text.length > 200 ? '…' : ''}</div>`;
+  }).join('');
+}
+
+function renderNeo4j(raw) {
+  const el = document.getElementById('ctx-neo4j');
+  if (raw.includes('[NEO4J_MISS]') || raw.includes('[NEO4J_ERROR]')) {
+    el.textContent = raw.replace(/\[NEO4J_\w+\]\s*/, '');
+    return;
+  }
+  const lines = raw.split('\n').filter(l => l.trim());
+  el.innerHTML = lines.map(line => {
+    const rm = line.match(/\[(HAS_BEEF_WITH|DROPPED_BY|SECRETLY_MANAGED_BY)\]/);
+    if (rm) {
+      const rest = line.replace(/\s*\[.*?\]\s*[→←]\s*/, '').trim();
+      return `<div class="edge"><span class="edge-type">${rm[1].replace(/_/g,' ')}</span><span>${esc(rest)}</span></div>`;
+    }
+    if (line.match(/—\s*(Outgoing|Incoming|Hidden)/)) {
+      return `<div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#aaa;padding:10px 0 4px;text-transform:uppercase">${esc(line.trim())}</div>`;
+    }
+    return '';
+  }).join('');
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-panel');
+  el.textContent = msg;
+  el.classList.add('active');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
