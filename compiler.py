@@ -33,7 +33,7 @@ OPENROUTER_BASE    = "https://openrouter.ai/api/v1"
 
 TEACHER_MODEL = os.getenv(
     "TEACHER_MODEL",
-    "openrouter/google/gemini-2.0-flash-001",       # heavy: writes perfect traces
+    "openrouter/google/gemini-2.5-flash",       # heavy: writes perfect traces
 )
 STUDENT_MODEL = os.getenv(
     "STUDENT_MODEL",
