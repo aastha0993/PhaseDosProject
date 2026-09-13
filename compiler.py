@@ -37,7 +37,7 @@ TEACHER_MODEL = os.getenv(
 )
 STUDENT_MODEL = os.getenv(
     "STUDENT_MODEL",
-    "openrouter/google/gemini-2.0-flash-lite-001",  # fast + cheap: runs in production
+    "openrouter/google/gemini-2.5-flash",  # fast + cheap: runs in production
 )
 
 OPTIMIZED_STATE_PATH = Path("optimized_pr_state.json")
